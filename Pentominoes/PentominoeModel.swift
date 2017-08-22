@@ -11,7 +11,7 @@ import Foundation
 
 class PentominoeModel {
 
-    private let numberOfBoards = 6
+    fileprivate let numberOfBoards = 6
     let pieceLetters = ["F", "I", "L", "N", "P", "T", "U","V","W","X","Y","Z"]
     let numberOfPieces:Int
     
@@ -23,7 +23,7 @@ class PentominoeModel {
     
     init() {
         
-        let solutionPath = NSBundle.mainBundle().pathForResource("Solutions", ofType: "plist")
+        let solutionPath = Bundle.main.path(forResource: "Solutions", ofType: "plist")
         self.solutions = NSArray(contentsOfFile: solutionPath!)
   
         //Create array of pieces' image names
@@ -41,11 +41,11 @@ class PentominoeModel {
         
     }
     
-    func imageBoardNameAtIndex(index:Int) -> String {
+    func imageBoardNameAtIndex(_ index:Int) -> String {
         return self.boards[index]
     }
     
-    func imagePieceNameAtIndex(index:Int) -> String{
+    func imagePieceNameAtIndex(_ index:Int) -> String{
         return self.pieces[index]
     }
     
@@ -60,7 +60,7 @@ class PentominoeModel {
     func solutionForPiece(pieceWithLetter letter:String, onBoard board:Int) -> [String:Int] {
         
         let solution = solutions[board - 1] as! NSDictionary
-        let newSolution = solution.valueForKey(letter) as! [String:Int]
+        let newSolution = solution.value(forKey: letter) as! [String:Int]
         
         
         return newSolution

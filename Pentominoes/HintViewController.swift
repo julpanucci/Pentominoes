@@ -7,6 +7,30 @@
 //
 
 import UIKit
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 class HintViewController: UIViewController {
     
@@ -21,7 +45,7 @@ class HintViewController: UIViewController {
     
     let kSideOfSquare:CGFloat = 30.0
     
-    @IBAction func nextHintAction(sender: AnyObject) {
+    @IBAction func nextHintAction(_ sender: AnyObject) {
         revealNextHint()
     }
     
@@ -67,15 +91,15 @@ class HintViewController: UIViewController {
                 pieceImageView.numberOfFlips = flips!
                
                 if(rotations > 0) {
-                    pieceImageView.transform = CGAffineTransformMakeRotation(CGFloat(M_PI_2 * Double(rotations!)))
+                    pieceImageView.transform = CGAffineTransform(rotationAngle: CGFloat(M_PI_2 * Double(rotations!)))
                 }
                 if(flips > 0) {
-                    pieceImageView.transform = CGAffineTransformScale(pieceImageView.transform, -1.0, 1.0);
+                    pieceImageView.transform = pieceImageView.transform.scaledBy(x: -1.0, y: 1.0);
                 }
                 
-                pieceImageView.frame = CGRectMake(xcord, ycord, pieceImageView.frame.size.width, pieceImageView.frame.size.height)
+                pieceImageView.frame = CGRect(x: xcord, y: ycord, width: pieceImageView.frame.size.width, height: pieceImageView.frame.size.height)
                 self.boardImageView.addSubview(pieceImageView)
-                pieceImageView.hidden = true
+                pieceImageView.isHidden = true
             
             
                 pieceIndex += 1;
@@ -91,7 +115,7 @@ class HintViewController: UIViewController {
             
             if piece.shouldBeInHint {
                 showPieceWithLetter(piece.letter)
-                self.boardPieces.removeAtIndex(hintCount)
+                self.boardPieces.remove(at: hintCount)
                 break
             }
             hintCount += 1
@@ -104,17 +128,17 @@ class HintViewController: UIViewController {
      
      - parameter letter: letter of piece we want to reveal
      */
-    func showPieceWithLetter(letter:String) {
+    func showPieceWithLetter(_ letter:String) {
         for piece in hintPieces {
             if piece.letter == letter {
-                piece.hidden = false
+                piece.isHidden = false
             }
         }
     }
   
     
-    @IBAction func dismiss(sender: AnyObject) {
-        self.dismissViewControllerAnimated(true, completion: nil)
+    @IBAction func dismiss(_ sender: AnyObject) {
+        self.dismiss(animated: true, completion: nil)
     }
 
 }

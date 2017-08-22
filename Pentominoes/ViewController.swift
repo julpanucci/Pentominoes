@@ -7,6 +7,30 @@
 //
 
 import UIKit
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 class ViewController: UIViewController {
 
@@ -28,20 +52,20 @@ class ViewController: UIViewController {
     
     
     //MARK: - Actions
-    @IBAction func solveAction(sender: AnyObject) {
+    @IBAction func solveAction(_ sender: AnyObject) {
         solveGame()
     }
     
-    @IBAction func resetAction(sender: AnyObject) {
+    @IBAction func resetAction(_ sender: AnyObject) {
         resetPiecesToDefaultPosition()
     }
-    @IBAction func changePlayingBoardAction(sender: AnyObject) {
+    @IBAction func changePlayingBoardAction(_ sender: AnyObject) {
         if let boardButton = sender as? UIButton {
             model.currentBoardNumber = boardButton.tag
             if model.currentBoardNumber == 0 {
-                hintButton.enabled = false
+                hintButton.isEnabled = false
             }else {
-                hintButton.enabled = true
+                hintButton.isEnabled = true
             }
             self.boardImageView.image = UIImage(named: model.imageBoardNameAtIndex((model.currentBoardNumber)))
         }
@@ -87,7 +111,7 @@ class ViewController: UIViewController {
             let doubleTap = UITapGestureRecognizer(target: self, action: #selector(flipPiece(_:)))
             let pan = UIPanGestureRecognizer(target: self, action: #selector(panPiece(_:)))
             
-            singleTap.requireGestureRecognizerToFail(doubleTap)
+            singleTap.require(toFail: doubleTap)
             doubleTap.numberOfTapsRequired = 2
             
             pieceImageView.addGestureRecognizer(singleTap)
@@ -144,8 +168,8 @@ class ViewController: UIViewController {
                 xcord = 0.0
                 maxHeight = 0.0
             }
-            UIView.animateWithDuration(kAnimationDuration, animations: {
-                let initialPieceFrame = CGRectMake(xcord, ycord, pieceSize.width, pieceSize.height)
+            UIView.animate(withDuration: kAnimationDuration, animations: {
+                let initialPieceFrame = CGRect(x: xcord, y: ycord, width: pieceSize.width, height: pieceSize.height)
                 piece.frame = initialPieceFrame
                 
                 //Set the inital frame of piece to use later when resetting back to original position
@@ -173,12 +197,12 @@ class ViewController: UIViewController {
                 moveView(piece, toSuperView: self.piecesContainer)
                 
 
-                        UIView.animateWithDuration(kAnimationDuration, animations: { 
+                        UIView.animate(withDuration: kAnimationDuration, animations: { 
                             
-                            piece.transform = CGAffineTransformIdentity;
+                            piece.transform = CGAffineTransform.identity;
                             
                             piece.frame = piece.intialFrame
-                            }, completion: { (let succeeded) in
+                            }, completion: { (succeeded) in
                                 piece.numberOfFlips = 0
                                 piece.numberOfRotations = 0
                                 piece.shouldBeInHint = true
@@ -220,17 +244,17 @@ class ViewController: UIViewController {
                 currentPiece.numberOfFlips = flips!
                 
                 //Animate piece to board image view rotating and/or flipping it if need be
-                UIView.animateWithDuration(kAnimationDuration, animations: { 
+                UIView.animate(withDuration: kAnimationDuration, animations: { 
                     if(rotations > 0) {
-                        currentPiece.transform = CGAffineTransformMakeRotation(CGFloat(M_PI_2 * Double(rotations!)))
+                        currentPiece.transform = CGAffineTransform(rotationAngle: CGFloat(M_PI_2 * Double(rotations!)))
                     }
                     if(flips > 0) {
-                        currentPiece.transform = CGAffineTransformScale(currentPiece.transform, -1.0, 1.0);
+                        currentPiece.transform = currentPiece.transform.scaledBy(x: -1.0, y: 1.0);
                     }
                     
-                    currentPiece.frame = CGRectMake(xcord, ycord, currentPiece.frame.size.width, currentPiece.frame.size.height)
+                    currentPiece.frame = CGRect(x: xcord, y: ycord, width: currentPiece.frame.size.width, height: currentPiece.frame.size.height)
                     self.boardImageView.addSubview(currentPiece)
-                    }, completion: { (let succeeded) in
+                    }, completion: { (succeeded) in
                         currentPiece.shouldBeInHint = false
                 })
                 
@@ -243,12 +267,12 @@ class ViewController: UIViewController {
         solved = true
     }
     
-    func enableButtons(enabled:Bool)
+    func enableButtons(_ enabled:Bool)
     {
         for button in boardButtonArray {
-            button.enabled = enabled
+            button.isEnabled = enabled
         }
-        solveButton.enabled = enabled
+        solveButton.isEnabled = enabled
         
     }
     
@@ -260,16 +284,16 @@ class ViewController: UIViewController {
      
      - parameter tap: requires on single tap
      */
-    func roatePiece(tap:UITapGestureRecognizer) {
+    func roatePiece(_ tap:UITapGestureRecognizer) {
         
         if let piece = tap.view as? PieceImageView {
             
-            if tap.state == .Ended {
+            if tap.state == .ended {
                 piece.addRotation()
                 let direction = (piece.numberOfFlips == 1) ? -1 : 1 as Double
                 
-                UIView.animateWithDuration(kRotateAnimtionDuration, animations: {
-                    piece.transform = CGAffineTransformRotate(piece.transform, CGFloat(M_PI_2 * direction))
+                UIView.animate(withDuration: kRotateAnimtionDuration, animations: {
+                    piece.transform = piece.transform.rotated(by: CGFloat(M_PI_2 * direction))
                 })
             }
         }
@@ -281,38 +305,38 @@ class ViewController: UIViewController {
      
      - parameter tap: requires a double tap
      */
-    func flipPiece(tap:UITapGestureRecognizer) {
+    func flipPiece(_ tap:UITapGestureRecognizer) {
         if let piece = tap.view as? PieceImageView {
-            if tap.state == .Ended {
+            if tap.state == .ended {
                 piece.addFlip()
                 
                 let x = (piece.numberOfRotations % 2 == 0) ? -1: 1 as CGFloat
                 let y = -x
-                UIView.animateWithDuration(kFlipAnimationDuration, animations: {
-                    piece.transform = CGAffineTransformScale(piece.transform, x, y)
+                UIView.animate(withDuration: kFlipAnimationDuration, animations: {
+                    piece.transform = piece.transform.scaledBy(x: x, y: y)
                 })
             }
         }
     }
     
-    func panPiece(pan:UIPanGestureRecognizer) {
+    func panPiece(_ pan:UIPanGestureRecognizer) {
         if let piece = pan.view as? PieceImageView {
-            let center = pan.locationInView(self.boardImageView)
+            let center = pan.location(in: self.boardImageView)
             
             switch pan.state {
-            case .Began:
+            case .began:
                 moveView(piece, toSuperView: boardImageView)
                 //Shrink the piece down when we begin moving it
                 shrinkPiece(piece, shrink: true)
-            case .Changed:
+            case .changed:
                 piece.center = center
-            case .Ended:
+            case .ended:
                 //When it has been set or dropped by a finger unshrink it back to its original frame and transform
                 shrinkPiece(piece, shrink: false)
                 
                 //If piece is on board snap it to the grid
                 if isPieceOnBoard(piece) {
-                    UIView.animateWithDuration(kSnapAnimationDuration, animations: {
+                    UIView.animate(withDuration: kSnapAnimationDuration, animations: {
                         self.snapPieceToGrid(piece)
                     })
                 }else {
@@ -333,15 +357,15 @@ class ViewController: UIViewController {
      
      - parameter piece: pentomino piece that is being reset
      */
-    func resetPieceToInitialFrame(piece:PieceImageView) {
+    func resetPieceToInitialFrame(_ piece:PieceImageView) {
         
         moveView(piece, toSuperView: piecesContainer)
-        UIView.animateWithDuration(kAnimationDuration, animations: { 
+        UIView.animate(withDuration: kAnimationDuration, animations: { 
             piece.frame = piece.intialFrame
-            }) { (let succeeded) in
+            }, completion: { (succeeded) in
                 //Because it is not on the board we set this to true, so if user needs a hint this piece will be revealed for them at some point
                 piece.shouldBeInHint = true
-        }
+        }) 
     }
     
     /**
@@ -351,7 +375,7 @@ class ViewController: UIViewController {
      
      - returns: returns true if it is on the board, false otherwise
      */
-    func isPieceOnBoard(piece:PieceImageView) -> Bool {
+    func isPieceOnBoard(_ piece:PieceImageView) -> Bool {
         
         let boardWidth = boardImageView.frame.size.width
         let boardHeight = boardImageView.frame.size.height
@@ -362,7 +386,7 @@ class ViewController: UIViewController {
         }
     }
     
-    func snapPieceToGrid(piece:PieceImageView)
+    func snapPieceToGrid(_ piece:PieceImageView)
     {
         let x = piece.frame.origin.x / kSideOfSquare
         let y = piece.frame.origin.y / kSideOfSquare
@@ -381,15 +405,15 @@ class ViewController: UIViewController {
      - parameter piece:  piece to be shrunk
      - parameter shrink: if true -> shrink it, if false -> bring back to original scale
      */
-    func shrinkPiece(piece:PieceImageView, shrink:Bool) {
+    func shrinkPiece(_ piece:PieceImageView, shrink:Bool) {
         
         if shrink {
-           UIView.animateWithDuration(kSnapAnimationDuration, animations: { 
-            piece.transform = CGAffineTransformScale(piece.transform, self.kShrinkScale, self.kShrinkScale)
+           UIView.animate(withDuration: kSnapAnimationDuration, animations: { 
+            piece.transform = piece.transform.scaledBy(x: self.kShrinkScale, y: self.kShrinkScale)
            })
         }else {
-            UIView.animateWithDuration(kSnapAnimationDuration, animations: { 
-                piece.transform = CGAffineTransformScale(piece.transform, 1/self.kShrinkScale, 1/self.kShrinkScale)
+            UIView.animate(withDuration: kSnapAnimationDuration, animations: { 
+                piece.transform = piece.transform.scaledBy(x: 1/self.kShrinkScale, y: 1/self.kShrinkScale)
             })
         }
     }
@@ -405,9 +429,9 @@ class ViewController: UIViewController {
      - parameter view:      View to be moved
      - parameter superView: Super view that will contain view being passed
      */
-    func moveView(view:UIView, toSuperView superView:UIView)
+    func moveView(_ view:UIView, toSuperView superView:UIView)
     {
-        let newOrigin = superView.convertPoint(view.frame.origin, fromView: view.superview)
+        let newOrigin = superView.convert(view.frame.origin, from: view.superview)
         view.frame.origin = newOrigin
         superView.addSubview(view)
     }
@@ -415,9 +439,9 @@ class ViewController: UIViewController {
     
     //MARK: - Segue Functions
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if (segue.identifier == "HintSegue") {
-            if let hintVC = segue.destinationViewController as? HintViewController {
+            if let hintVC = segue.destination as? HintViewController {
                 //Passing our model to the hint view controller so it can access properties of the pieces needed to determine if a piece should be in the hint or not, as well as the current board number to display that in the hint.
                 hintVC.model = self.model
                 hintVC.boardPieces = self.boardPieces
